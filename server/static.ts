@@ -3,26 +3,25 @@ import path from "path";
 import fs from "fs";
 
 export function serveStatic(app: Express) {
+  // Use process.cwd() to get the project root accurately on Render
   const distPath = path.resolve(process.cwd(), "dist", "public");
 
-  // 1. Log the path for debugging
-  console.log(`[Static] Looking for assets in: ${distPath}`);
-
-  // 2. Serve all files from dist/public (including index.css and JS files)
+  // Serve static files from dist/public
   app.use(express.static(distPath));
 
-  // 3. Fallback for SPA (Single Page Application) routing
+  // Explicitly serve the assets folder
+  app.use("/assets", express.static(path.resolve(distPath, "assets")));
+
   app.use("*", (req, res, next) => {
-    // Skip API calls
     if (req.path.startsWith("/api")) {
       return next();
     }
-
+    
     const indexPath = path.resolve(distPath, "index.html");
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
-      res.status(404).send("Front-end build files not found in dist/public");
+      res.status(404).send("Build assets not found. Please check dist/public.");
     }
   });
 }
