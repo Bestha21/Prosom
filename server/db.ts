@@ -14,9 +14,9 @@ if (!databaseUrl) {
 
 export const pool = new Pool({ 
   connectionString: databaseUrl,
-  // Force SSL for EVERYTHING except local development
-  ssl: process.env.NODE_ENV === "production" 
-    ? { rejectUnauthorized: false } 
-    : undefined
+  ssl: {
+    // This is the critical part to fix the 'self-signed certificate' error
+    rejectUnauthorized: false 
+  }
 });
 export const db = drizzle(pool, { schema });
