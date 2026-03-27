@@ -1088,7 +1088,7 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  const port = parseInt(process.env.PORT || "5000", 10);
+  const port = parseInt(process.env.PORT || "10000", 10);
     
   httpServer.on('error', (err: any) => {
     console.error(`Server error: ${err.message}`);

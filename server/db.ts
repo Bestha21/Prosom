@@ -14,6 +14,9 @@ if (!databaseUrl) {
 
 export const pool = new Pool({ 
   connectionString: databaseUrl,
-  ssl: process.env.AWS_DATABASE_URL ? { rejectUnauthorized: false } : undefined
+  // This ensures SSL is used if we are NOT on localhost
+  ssl: databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1') 
+    ? undefined 
+    : { rejectUnauthorized: false }
 });
 export const db = drizzle(pool, { schema });
