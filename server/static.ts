@@ -1,26 +1,34 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
 export function serveStatic(app: Express) {
-  // Use path.resolve to find the dist/public directory accurately on Render
+  // Try to find the absolute path to the 'dist/public' folder
   const distPath = path.resolve(process.cwd(), "dist", "public");
-  
+  const fallbackPath = path.resolve(__dirname, "..", "dist", "public");
+
+  let finalPath = distPath;
+
   if (!fs.existsSync(distPath)) {
-    // If that fails, try a fallback for local development
-    const localPath = path.resolve(process.cwd(), "public");
-    if (!fs.existsSync(localPath)) {
-      throw new Error(
-        `Could not find the build directory at ${distPath} or ${localPath}. Make sure to build the client first`,
-      );
+    if (fs.existsSync(fallbackPath)) {
+      finalPath = fallbackPath;
+    } else {
+      console.error(`Directory missing. CWD: ${process.cwd()}, Dirname: ${__dirname}`);
+      // Don't throw yet, let the logs show us what's happening
     }
   }
 
-  app.use(express.static(distPath));
+  app.use(express.static(finalPath));
 
-  // Handle Client-Side Routing: fallback to index.html
-  app.use("*", (_req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
+  app.use("*", (req, res, next) => {
+    // If it's an API call, don't send index.html
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    res.sendFile(path.resolve(finalPath, "index.html"), (err) => {
+      if (err) {
+        res.status(404).send("Front-end build files not found. Please check dist/public.");
+      }
+    });
   });
 }
